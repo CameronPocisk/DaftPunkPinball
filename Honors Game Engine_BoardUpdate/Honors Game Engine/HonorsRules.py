@@ -62,8 +62,9 @@ class GameEvents(enum.Enum):
     RIGHT_STROKE =      [8,0x10],       []  
     POP_0 =             [8,0x20],       [EventTypes.POP_BUMPER]
     POP_1 =             [8,0x40],       [EventTypes.POP_BUMPER]
-    POP_2 =             [8,0x80],       [EventTypes.POP_BUMPER]   
-    
+    POP_2 =             [8,0x80],       [EventTypes.POP_BUMPER]
+
+    # These appear to have at least a few game specific events. I'll probably have to remove (some of) them
     START_PUSH =        [3,0x01],       [] 
     BALL_END =          [8,0x01],       []
     SELECT_PUSH =       [3,0x02],       []
@@ -133,6 +134,8 @@ Keyboard_Mapping_Dict = {
 }   
 
 #This is the default scoring for particular shots when there isn't a special score implemented within your rules
+# Updated according to (link below) Not yet in Millions's
+# https://docs.google.com/document/d/18vOx3k68INuvZT0ngx1y79HDwag3ohA7pIhxVJZ9mpY/edit?tab=t.0#heading=h.vsb2clw4pagp
 Default_Scoring_Dict = {
     GameEvents.TIME_TICK:       0,
     GameEvents.SCOOP_0:         100,
@@ -148,13 +151,6 @@ Default_Scoring_Dict = {
     GameEvents.LEFT_STROKE:     0,
     GameEvents.RIGHT_FLIPPER:   0,
     GameEvents.RIGHT_STROKE:    0,
-    GameEvents.PLUNGER_SKILL_SHOT: 0,
-    GameEvents.LEFT_POP_BUMPER: 0,
-    GameEvents.RIGHT_POP_BUMPER: 0,
-    GameEvents.LEFT_RAMP_ENTRANCE: 0,
-    GameEvents.RIGHT_RAMP_ENTRANCE: 0,
-    GameEvents.REAR_SWITCH: 0,
-    GameEvents.PYRAMID_DROP_SHOTS: 0,
     }
    
 #Default Scoring for when an event/shot isn't part of the active mode
@@ -164,9 +160,10 @@ def basic_scoring(event: GameEvents, m_vars):
     return Default_Scoring_Dict.get(event,0)
 
 #This is a class containing the different background images you plan to use in your rules
+# I may expand on this in the future, or really try to leverage the gifs. 
 class BackgroundImages():
-    BEARCAT = pygame.transform.scale(pygame.image.load("Background_Images/Bearcat.png"),(1280,720))
-    MONOGRAM = pygame.transform.scale(pygame.image.load("Background_Images/Monogram.png"),(1280,720))
+    BEARCAT = pygame.transform.scale(pygame.image.load("./Background_Images/Bearcat.png"),(1280,720))
+    MONOGRAM = pygame.transform.scale(pygame.image.load("./Background_Images/Monogram.png"),(1280,720))
     #Don't change this part
     def __init__(self) -> None:
         pass

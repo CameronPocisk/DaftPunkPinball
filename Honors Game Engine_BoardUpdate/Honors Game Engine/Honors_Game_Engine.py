@@ -1,5 +1,5 @@
 # import package pygame
-from cgi import test
+# from cgi import test
 from functools import total_ordering
 from platform import node
 from tkinter.messagebox import NO
@@ -7,6 +7,7 @@ import pygame
 import os
 import enum
 import types
+from HonorsRules import GameEvents 
 from HonorsRules import GenerateModeList
 from MachineClasses import Machine
 from HonorsRules import Keyboard_Mapping_Dict
