@@ -9,8 +9,6 @@ from HonorsIndicator import Indicator,HorizontalSweep,SetIndicators,VerticalSwee
 
 
 
-
-
 #Define event types within the game
 #These are used within the rules to check if an event matched a broad class of events.
 #This way, you don't have to list every possible shot/event of that type within the if statement.
@@ -23,17 +21,16 @@ class EventTypes(enum.Enum):
 
     #Game Specific Events
     MAIN_SHOT = enum.auto() #I use these to qualify modes
-    SPINNER = enum.auto()
-    POP_BUMPER = enum.auto()
-    SLINGSHOT = enum.auto()
-    RAMP_SHOT = enum.auto()
     TIME_TICK = enum.auto()
-    ORBIT_SHOT = enum.auto()
-    LOOP_SHOT = enum.auto()
-    SWITCH_HIT = enum.auto()
-    MODE_QUALIFIER = enum.auto()
-    NEWTON_SHOT = enum.auto()
-    STANDUP_TARGET = enum.auto()
+    STANDUP_TARGET = enum.auto() # HBFS shots
+    POP_BUMPER = enum.auto() # We have two
+    SPINNER = enum.auto() # One for each ramp
+    RAMP_SHOT = enum.auto() # Another way to classify the ramp
+    DROP_TARGET = enum.auto() # TODO: what inputs / info do we get about the triple drop shot?
+    PYRAMID_HIT = enum.auto()
+    ORBIT_ROLLOVER = enum.auto()
+    # Idk if we need these.
+    MODE_QUALIFIER = enum.auto() # What is this again?
 
     # TODO: add the enum options the TYPES of shots we will have
 
@@ -62,42 +59,46 @@ class GameEvents(enum.Enum):
     LAUNCH_PUSH =       [8,0x01],       []
     LEFT_FLIPPER =      [8,0x02],       []
     RIGHT_FLIPPER =     [8,0x04],       []
-    LEFT_STROKE =       [8,0x08],       []
-    RIGHT_STROKE =      [8,0x10],       []  
-    POP_0 =             [8,0x20],       [EventTypes.POP_BUMPER]
-    POP_1 =             [8,0x40],       [EventTypes.POP_BUMPER]
-    POP_2 =             [8,0x80],       [EventTypes.POP_BUMPER]
+    LEFT_STROKE =       [8,0x08],       [] # Stroke?
+    RIGHT_STROKE =      [8,0x10],       []
+    # I guess the pop bumper shots are going to be up here
+    POP_LEFT =             [8,0x20],       [EventTypes.POP_BUMPER]
+    POP_RIGHT =             [8,0x40],       [EventTypes.POP_BUMPER]
 
-    # These appear to have at least a few game specific events. I'll probably have to remove (some of) them
+    # Game specific events. Don't delete
     START_PUSH =        [3,0x01],       [] 
     BALL_END =          [8,0x01],       []
     SELECT_PUSH =       [3,0x02],       []
     BALL_LAUNCH =       [3,0x04],       []
-    CYBORG_0 =          [3,0x08],       [EventTypes.STANDUP_TARGET,EventTypes.SWITCH_HIT]
-    CYBORG_1 =          [3,0x10],       [EventTypes.STANDUP_TARGET,EventTypes.SWITCH_HIT]
-    CYBORG_2 =          [3,0x20],       [EventTypes.STANDUP_TARGET,EventTypes.SWITCH_HIT]   
-
+    BALL_DRAIN =        [3,0x40],       []
     
-    
-    
-    
-    BALL_DRAIN =        [3,0x40],           []
-    #TILT =              [7,0x01],       []
-    LAUNCH_SWITCH =     [3,0x80],       []
+    # TODO: Add our specific game shots based on their event type and switch mask
+    # TODO: Pick the correct event types for each shot
+    # DAFT PUNK PINBALL EVENTS
+    HARDER_STANDUP =    [-1, 0x00], [EventTypes.STANDUP_TARGET],
+    BETTER_STANDUP =    [-1, 0x00], [EventTypes.STANDUP_TARGET],
+    FASTER_STANDUP =    [-1, 0x00], [EventTypes.STANDUP_TARGET],
+    STRONGER_STANDUP =  [-1, 0x00], [EventTypes.STANDUP_TARGET],
 
+    PYRAMID_HIT =  [-1, 0x00], [EventTypes.PYRAMID_HIT],
+    # IS THIS HOW IT WORKS?
+    DROP_TARGET_1 =  [-1, 0x00], [EventTypes.DROP_TARGET],
+    DROP_TARGET_3 =  [-1, 0x00], [EventTypes.DROP_TARGET],
+    DROP_TARGET_2 =  [-1, 0x00], [EventTypes.DROP_TARGET],
 
-
-    #These events are specific to your particular machine and you can change these
-    LEFT_ORBIT =        [4,0x01],     [EventTypes.MAIN_SHOT,EventTypes.ORBIT_SHOT,EventTypes.MODE_QUALIFIER]    
+    # Spinner signify the ramp shots (Maybe call them left and right ramp?)
+    LEFT_RAMP_SPINNER =  [-1, 0x00], [EventTypes.SPINNER],
+    RIGHT_RAMP_SPINNER =  [-1, 0x00], [EventTypes.SPINNER],
+    # Shot representing hitting the rollover in the orbit
+    ORBIT_SHOT =  [-1, 0x00], [EventTypes.ORBIT_ROLLOVER],
+    
+    # EXAMPLE EVENTS
+    LEFT_ORBIT =        [4,0x01],     [EventTypes.MAIN_SHOT,EventTypes.MODE_QUALIFIER]    
     LEFT_RAMP_EXIT =    [4,0x02],     [EventTypes.MAIN_SHOT,EventTypes.RAMP_SHOT,EventTypes.MODE_QUALIFIER]
-    CENTER_SPINNER =    [4,0x04],     [EventTypes.MAIN_SHOT,EventTypes.SPINNER,EventTypes.MODE_QUALIFIER]
     RIGHT_RAMP_EXIT =   [4,0x08],     [EventTypes.MAIN_SHOT,EventTypes.RAMP_SHOT,EventTypes.MODE_QUALIFIER]
-    RIGHT_ORBIT =       [4,0x10],     [EventTypes.MAIN_SHOT,EventTypes.ORBIT_SHOT,EventTypes.MODE_QUALIFIER]
-    SCOOP_0 =           [4,0x20],     [EventTypes.MAIN_SHOT]
-
-    # TODO: Add out specific game shots based on their event type and switch mask
-    # HARDER_STANDUP =    [switch, 0xmask], [EventTypes.STANDUP_TARGET],
-
+    RIGHT_ORBIT =       [4,0x10],     [EventTypes.MAIN_SHOT,EventTypes.MODE_QUALIFIER]
+    CENTER_SPINNER =    [4,0x04],     [EventTypes.MAIN_SHOT,EventTypes.SPINNER,EventTypes.MODE_QUALIFIER]
+    SCOOP_0 =           [4,0x20],     [EventTypes.MAIN_SHOT]\
 
 #These are the mappings between key presses on your keyboard and events.
 #This allows you to simulate events on the keyboard without the physical pinball hardware.
@@ -111,7 +112,6 @@ Keyboard_Mapping_Dict = {
     pygame.K_y:     GameEvents.RIGHT_STROKE,
     pygame.K_u:     GameEvents.START_PUSH,
     
-    pygame.K_i:     GameEvents.LAUNCH_SWITCH,
     pygame.K_a:     GameEvents.SCOOP_0,
     pygame.K_s:     GameEvents.LEFT_ORBIT,
     pygame.K_d:     GameEvents.LEFT_RAMP_EXIT,
@@ -121,12 +121,8 @@ Keyboard_Mapping_Dict = {
     pygame.K_j:     None,
 
     pygame.K_k:     None,
-    pygame.K_z:     GameEvents.POP_0,
-    pygame.K_x:     GameEvents.POP_1,
-    pygame.K_c:     GameEvents.POP_2,
-    pygame.K_v:     GameEvents.CYBORG_0,
-    pygame.K_b:     GameEvents.CYBORG_1,
-    pygame.K_n:     GameEvents.CYBORG_2,
+    pygame.K_z:     GameEvents.POP_LEFT,
+    pygame.K_x:     GameEvents.POP_RIGHT,
     pygame.K_m:     None,
     pygame.K_COMMA: None,
 
@@ -137,7 +133,21 @@ Keyboard_Mapping_Dict = {
 
     pygame.K_RETURN:  GameEvents.START_PUSH,
     pygame.K_BACKSPACE: GameEvents.BALL_DRAIN,
-    pygame.K_SPACE: GameEvents.SELECT_PUSH
+    pygame.K_SPACE: GameEvents.SELECT_PUSH,
+
+    # TODO: assign Keys for our shots
+    # KeyPresses for OUR SHOTS
+    pygame.K_z: GameEvents.HARDER_STANDUP,
+    pygame.K_z: GameEvents.BETTER_STANDUP,
+    pygame.K_z: GameEvents.FASTER_STANDUP,
+    pygame.K_z: GameEvents.STRONGER_STANDUP,
+    pygame.K_z: GameEvents.PYRAMID_HIT,
+    pygame.K_z: GameEvents.DROP_TARGET_1,
+    pygame.K_z: GameEvents.DROP_TARGET_3,
+    pygame.K_z: GameEvents.DROP_TARGET_2,
+    pygame.K_z: GameEvents.LEFT_RAMP_SPINNER,
+    pygame.K_z: GameEvents.RIGHT_RAMP_SPINNER,
+    pygame.K_z: GameEvents.ORBIT_SHOT,
 }   
 
 #This is the default scoring for particular shots when there isn't a special score implemented within your rules
@@ -151,9 +161,6 @@ Default_Scoring_Dict = {
     GameEvents.CENTER_SPINNER:  100,
     GameEvents.RIGHT_RAMP_EXIT: 100,
     GameEvents.RIGHT_ORBIT:     100,
-    GameEvents.CYBORG_0:        25,
-    GameEvents.CYBORG_1:        25,
-    GameEvents.CYBORG_2:        25,
     GameEvents.LEFT_FLIPPER:    0,
     GameEvents.LEFT_STROKE:     0,
     GameEvents.RIGHT_FLIPPER:   0,
@@ -161,6 +168,17 @@ Default_Scoring_Dict = {
 
     # These happen all the time so when an event doesn't have a score it will give -999
     # That means ALL GAME EVENTS NEED A SCORE HERE (Maybe I can change it to 0 and only scoring ones give pts)
+    GameEvents.HARDER_STANDUP: -1,
+    GameEvents.BETTER_STANDUP: -1,
+    GameEvents.FASTER_STANDUP: -1,
+    GameEvents.STRONGER_STANDUP: -1,
+    GameEvents.PYRAMID_HIT: -1,
+    GameEvents.DROP_TARGET_1: -1,
+    GameEvents.DROP_TARGET_3: -1,
+    GameEvents.DROP_TARGET_2: -1,
+    GameEvents.LEFT_RAMP_SPINNER: -1,
+    GameEvents.RIGHT_RAMP_SPINNER: -1,
+    GameEvents.ORBIT_SHOT: -1,
     }
    
 #Default Scoring for when an event/shot isn't part of the active mode
@@ -172,6 +190,7 @@ def basic_scoring(event: GameEvents, m_vars):
 #This is a class containing the different background images you plan to use in your rules
 # I may expand on this in the future, or really try to leverage the gifs. 
 class BackgroundImages():
+    # TODO: Get some better background image. Maybe a gif
     BEARCAT = pygame.transform.scale(pygame.image.load("./Background_Images/Bearcat.png"),(1280,720))
     MONOGRAM = pygame.transform.scale(pygame.image.load("./Background_Images/Monogram.png"),(1280,720))
     #Don't change this part
@@ -214,7 +233,7 @@ def GeneratePlayfieldIndicators():
         Inserts.SCOOP:          Indicator('Scoop',[8,0],[1,0x01]),
         Inserts.TEST_DRIVER:     Indicator('Driver',[1,0],[3,0x40])
         # This allows us to use the lights (inserts) to indicate shots to take
-        }
+    }
     return temp_dict
 
 
@@ -315,11 +334,12 @@ def GenerateModeList():
         MODE_A_2 = enum.auto()
         #Mode B is time based and has just one state
         MODE_B = enum.auto()
-        #Mode C is for cyborgs
-        CYBORG_MODE = enum.auto()
 
         ## DEFINE ALL OF OUT MODES HERE
         # PYRAMID_MODE = enum.auto()
+        # HBSF_MODE = enum.auto()
+        # LARGE_JACKPOT = enum.auto()
+        # SMALL_JACKPOT = enum.auto();
 
     ##############################################################################################################
     #Mode Variable Class
@@ -330,8 +350,6 @@ def GenerateModeList():
             self.qualifying_shot_count = 0 #This keeps track of how many mode qualifying shots have been made
             self.mode_selection_index = 0 #This keeps track of which mode the user has selected
             self.time_count = 0 #This keeps track of the time remaining within Mode B
-            self.cyborg_count = 0 #This keeps track of how many cyborg you hit
-
 
     ##############################################################################################################
     #Mode State Transition Function
@@ -435,11 +453,6 @@ def GenerateModeList():
                         mode_font = pygame.font.Font('Guardians.ttf', 72)
                         mode_text = mode_font.render("Mode B",True, (0,0,0))
                         animations.append(EventAnimations.image_splash_hold(1,mode_text,mode_text.get_rect(center=(640,400))))
-                    else:
-                        mode_font = pygame.font.Font('Guardians.ttf', 72)
-                        mode_text = mode_font.render("CYBORG SELECTED!!!",True, (0,0,0))
-                        animations.append(EventAnimations.image_splash_hold(1,mode_text,mode_text.get_rect(center=(640,400))))
-
 
 
                 #Check if right flipper button pressed
@@ -476,9 +489,7 @@ def GenerateModeList():
                         pygame.mixer.music.load('2517.mp3')
                         pygame.mixer.music.play(-1)
                     else:
-                        self.current_state = MainModeStates.CYBORG_MODE
-                        pygame.mixer.music.load('Datastream.mp3')
-                        pygame.mixer.music.play(-1)
+                        print("In unknown mode")
 
 
                 #Calculate score using basic scoring
@@ -561,34 +572,8 @@ def GenerateModeList():
                 if event == GameEvents.BALL_END:
                     self.current_state = MainModeStates.QUALIFYING_MODES
 
-            ## Here is the mode made in the video, adding our modes at the bottom
-            case MainModeStates.CYBORG_MODE:
-                mode_font = pygame.font.Font('Guardians.ttf', 72)
-                mode_text = mode_font.render("Shoot CYBORGS!!!",True, (0,0,0))
-                animations.append(EventAnimations.image_splash_hold(1,mode_text,mode_text.get_rect(center=(640,300))))
-                mode_font = pygame.font.Font('Guardians.ttf', 72)
-                mode_text = mode_font.render(f"Headcount {int(self.mode_vars.cyborg_count)}" ,True, (0,0,0))
-                animations.append(EventAnimations.image_splash_hold(1,mode_text,mode_text.get_rect(center=(640,500))))
-                # He's saying that in this mode the standup is special 
-                if EventTypes.STANDUP_TARGET in event.types:
-                    mode_font = pygame.font.Font('Guardians.ttf', 72)
-                    mode_text = mode_font.render("CYBORG HIT!!!",True, (0,0,0))
-                    animations.append(EventAnimations.image_splash_hold(20,mode_text,mode_text.get_rect(center=(640,400))))
-                    #Load and play sound effect for shot
-                    shot_sound = pygame.mixer.Sound('blaster.wav')
-                    shot_sound.set_volume(.3)
-                    pygame.mixer.Sound.play(shot_sound)
-                    score = 1000
-                    self.mode_vars.cyborg_count +=1
-                    if self.mode_vars.cyborg_count >= 10:
-                        score = 10000
-                        self.current_state = MainModeStates.QUALIFYING_MODES
-                        self.mode_vars.cyborg_count = 0
-                # This defines the rest of the scoring as basic / default
-                else:
-                    score = basic_scoring(event,self.mode_vars)
         
-        #Return results of event
+        #Return results of event (After mode processing)
         return (score,animations,led_animations,background)
 
     #Create Main Mode using states, state transitions, and variables
