@@ -19,7 +19,6 @@ from HonorsIndicator import Indicator
 
 
 
-
 # Enable SPI using ftdi chip
 Ftdi.show_devices()
 devices = Ftdi.list_devices()

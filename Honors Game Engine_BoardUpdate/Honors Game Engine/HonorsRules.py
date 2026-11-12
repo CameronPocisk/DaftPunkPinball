@@ -17,6 +17,8 @@ from HonorsIndicator import Indicator,HorizontalSweep,SetIndicators,VerticalSwee
 #For example, you may have a mode which looks for ramp shots, and you have three ramps in your game.
 #Instead of listing every possible ramp shot in the if statements, you can just check if the event of a ramp type.
 #Events can have more than one type.
+
+# Enum representations of the types of shots
 class EventTypes(enum.Enum):
 
     #Game Specific Events
@@ -32,6 +34,8 @@ class EventTypes(enum.Enum):
     MODE_QUALIFIER = enum.auto()
     NEWTON_SHOT = enum.auto()
     STANDUP_TARGET = enum.auto()
+
+    # TODO: add the enum options the TYPES of shots we will have
 
 #Define Game Event enumerations
 class GameEvents(enum.Enum):
@@ -90,6 +94,9 @@ class GameEvents(enum.Enum):
     RIGHT_RAMP_EXIT =   [4,0x08],     [EventTypes.MAIN_SHOT,EventTypes.RAMP_SHOT,EventTypes.MODE_QUALIFIER]
     RIGHT_ORBIT =       [4,0x10],     [EventTypes.MAIN_SHOT,EventTypes.ORBIT_SHOT,EventTypes.MODE_QUALIFIER]
     SCOOP_0 =           [4,0x20],     [EventTypes.MAIN_SHOT]
+
+    # TODO: Add out specific game shots based on their event type and switch mask
+    # HARDER_STANDUP =    [switch, 0xmask], [EventTypes.STANDUP_TARGET],
 
 
 #These are the mappings between key presses on your keyboard and events.
@@ -151,13 +158,16 @@ Default_Scoring_Dict = {
     GameEvents.LEFT_STROKE:     0,
     GameEvents.RIGHT_FLIPPER:   0,
     GameEvents.RIGHT_STROKE:    0,
+
+    # These happen all the time so when an event doesn't have a score it will give -999
+    # That means ALL GAME EVENTS NEED A SCORE HERE (Maybe I can change it to 0 and only scoring ones give pts)
     }
    
 #Default Scoring for when an event/shot isn't part of the active mode
 #This is basically just a class wrapper for the dictionary above
 #DON'T CHANGE THIS
 def basic_scoring(event: GameEvents, m_vars):
-    return Default_Scoring_Dict.get(event,0)
+    return Default_Scoring_Dict.get(event,-999)
 
 #This is a class containing the different background images you plan to use in your rules
 # I may expand on this in the future, or really try to leverage the gifs. 
@@ -179,6 +189,7 @@ class Inserts(enum.Enum):
     RIGHT_ORBIT = enum.auto()
     SCOOP = enum.auto()
     TEST_DRIVER = enum.auto()
+    # THESE ARE SPECIFIC LIGHTS / Inserts. We should try to get a couple
     
 #This function generates a dictionary of all the playfield inserts/indicators
 #Each Insert/Indicator has four attributes that you will need to define
@@ -202,6 +213,7 @@ def GeneratePlayfieldIndicators():
         Inserts.RIGHT_ORBIT:    Indicator('Orbit',[4,0],[0,0x04]),
         Inserts.SCOOP:          Indicator('Scoop',[8,0],[1,0x01]),
         Inserts.TEST_DRIVER:     Indicator('Driver',[1,0],[3,0x40])
+        # This allows us to use the lights (inserts) to indicate shots to take
         }
     return temp_dict
 
@@ -273,6 +285,10 @@ class GameMode:
 #This is a wrapper function that creates a list of all your modes.
 #Most of you will only need one mode (which may contain submodes), but hypothetically you
 #can have multiple modes running in parallel.
+
+# This is where we will create our modes / do most of the programming
+# Each mode may have sub-modes. 
+
 def GenerateModeList():
     #You must define three things for each mode
     #Mode States Enumerator: This is an enumerator class in which you define the states of the mode
@@ -301,6 +317,9 @@ def GenerateModeList():
         MODE_B = enum.auto()
         #Mode C is for cyborgs
         CYBORG_MODE = enum.auto()
+
+        ## DEFINE ALL OF OUT MODES HERE
+        # PYRAMID_MODE = enum.auto()
 
     ##############################################################################################################
     #Mode Variable Class
@@ -332,21 +351,26 @@ def GenerateModeList():
         #initialize score variable to zero
         #this will get updated by the following code as needed
         score = 0 #Initialize score to zero, if your rules don't change it, it will return zero (which is okay)
-        animations = [] #List of graphic animations
+        animations = [] #List of images used for animations
         led_animations = [] #List of LED/Insert Animations
         background = self.background_images.MONOGRAM #Background image, your rules can change this
         self.alerts = [] #This is used for game engine debugging purposes (Don't set or change)
 
         #update state machine and state transitions here
         #Case statement based on current mode state
+
+        # Switch statement for figuring out which event occured
+
         match self.current_state:
             #Currently qualifying a mode by making qualifying shots
             case MainModeStates.QUALIFYING_MODES:
                 
                 if event == GameEvents.TIME_TICK:
                     #These three line define a font, generate a text graphic using that font, then add the graphic animation to the list
+                    
+                    # TODO: get daft punk font.
                     mode_font = pygame.font.Font('Guardians.ttf', 72)
-                    mode_text = mode_font.render("Shoot Main Shots",True, (0,0,0))
+                    mode_text = mode_font.render("Shoot Main Shots",True, """0,0,0 is the color """(0,0,0))
                     #append image_splash_hold animaiton to animations list. 
                     #Note that the duration is 1. This means it will only be shown for one frame, which is okay, because we redraw it every update 
                     animations.append(EventAnimations.image_splash_hold(1,mode_text,mode_text.get_rect(center=(640,300))))
@@ -536,6 +560,8 @@ def GenerateModeList():
                 #If ball ends, reset to qualifying modes
                 if event == GameEvents.BALL_END:
                     self.current_state = MainModeStates.QUALIFYING_MODES
+
+            ## Here is the mode made in the video, adding our modes at the bottom
             case MainModeStates.CYBORG_MODE:
                 mode_font = pygame.font.Font('Guardians.ttf', 72)
                 mode_text = mode_font.render("Shoot CYBORGS!!!",True, (0,0,0))
@@ -543,6 +569,7 @@ def GenerateModeList():
                 mode_font = pygame.font.Font('Guardians.ttf', 72)
                 mode_text = mode_font.render(f"Headcount {int(self.mode_vars.cyborg_count)}" ,True, (0,0,0))
                 animations.append(EventAnimations.image_splash_hold(1,mode_text,mode_text.get_rect(center=(640,500))))
+                # He's saying that in this mode the standup is special 
                 if EventTypes.STANDUP_TARGET in event.types:
                     mode_font = pygame.font.Font('Guardians.ttf', 72)
                     mode_text = mode_font.render("CYBORG HIT!!!",True, (0,0,0))
@@ -557,6 +584,7 @@ def GenerateModeList():
                         score = 10000
                         self.current_state = MainModeStates.QUALIFYING_MODES
                         self.mode_vars.cyborg_count = 0
+                # This defines the rest of the scoring as basic / default
                 else:
                     score = basic_scoring(event,self.mode_vars)
         
